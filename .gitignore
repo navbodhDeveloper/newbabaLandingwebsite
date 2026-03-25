@@ -1,0 +1,25 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (if you add a build step later)
+node_modules/
+npm-debug.log*
+
+# Env files
+.env
+.env.local
+
+# Build output
+dist/
+build/
+
+# Large media (commit via Git LFS if needed)
+assets/images/*.psd
+assets/images/*.ai

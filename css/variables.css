@@ -1,0 +1,88 @@
+/* ============================================================
+   variables.css — Design tokens for Baba Satyanarayan Mourya
+   Edit colors, fonts, spacing all in one place here.
+   ============================================================ */
+
+:root {
+  /* — Brand Colors — */
+  --maroon:        #8B1E1E;
+  --maroon-dark:   #5C1010;
+  --maroon-light:  #A52A2A;
+  --saffron:       #FF9933;
+  --saffron-light: #FFB366;
+  --gold:          #C9A227;
+  --gold-light:    #E6C84A;
+  --gold-pale:     #F0DFA0;
+
+  /* — Background Palette — */
+  --bg-cream:      #FFF8EE;
+  --bg-warm:       #FFF0D6;
+  --bg-dark:       #0E0400;
+  --bg-dark2:      #1A0800;
+  --bg-dark3:      #2A1000;
+
+  /* — Text Colors — */
+  --text-primary:  #1C0D00;
+  --text-mid:      #4A2810;
+  --text-light:    #7A5533;
+  --text-muted:    #A07050;
+  --text-pale:     #B09070;
+  --text-white:    #FFF8EE;
+
+  /* — Section Alternating — */
+  --section-light: #FFF8EE;
+  --section-cream: #FFF0D6;
+  --section-dark:  #1A0800;
+
+  /* — Border — */
+  --border-gold:   rgba(201, 162, 39, 0.25);
+  --border-gold-strong: rgba(201, 162, 39, 0.5);
+
+  /* — Typography — */
+  --font-display:  'Cinzel', 'Palatino Linotype', Georgia, serif;
+  --font-hindi:    'Noto Serif Devanagari', 'Mangal', serif;
+  --font-body:     'Merriweather', Georgia, 'Times New Roman', serif;
+  --font-ui:       'Cinzel', Georgia, serif;
+
+  /* — Spacing Scale — */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  40px;
+  --space-2xl: 64px;
+  --space-3xl: 96px;
+
+  /* — Radius — */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  20px;
+
+  /* — Shadows — */
+  --shadow-card:  0 2px 20px rgba(139, 30, 30, 0.08);
+  --shadow-hover: 0 8px 32px rgba(201, 162, 39, 0.20);
+  --shadow-dark:  0 4px 24px rgba(0, 0, 0, 0.40);
+
+  /* — Transitions — */
+  --transition:       all 0.3s ease;
+  --transition-fast:  all 0.18s ease;
+  --transition-slow:  all 0.5s ease;
+
+  /* — Max Width — */
+  --max-width: 1280px;
+  --content-width: 1100px;
+
+  /* — Nav Height — */
+  --nav-height: 64px;
+}
+
+/* ============================================================
+   Dark Section Overrides (used on dark bg sections)
+   ============================================================ */
+.dark-section {
+  --text-primary: #FFF8EE;
+  --text-mid:     #E8D0B0;
+  --text-light:   #B09070;
+  --border-gold:  rgba(201, 162, 39, 0.20);
+}

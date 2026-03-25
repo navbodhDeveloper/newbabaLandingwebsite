@@ -1,0 +1,180 @@
+/* ============================================================
+   footer.css — Footer styles
+   ============================================================ */
+
+.footer {
+  background: #0E0400;
+  color: #C9A0A0;
+}
+
+.footer__rainbow {
+  height: 3px;
+  background: linear-gradient(90deg,
+    var(--maroon), var(--saffron), var(--gold), var(--saffron), var(--maroon)
+  );
+}
+
+.footer__inner {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: var(--space-2xl);
+  padding: var(--space-3xl) var(--space-lg) var(--space-2xl);
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+/* — Brand column — */
+.footer__brand-name {
+  font-family: var(--font-hindi);
+  font-size: 1.25rem;
+  color: var(--saffron);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.footer__brand-en {
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: block;
+  margin-bottom: var(--space-md);
+}
+
+.footer__brand-desc {
+  font-size: 0.8rem;
+  color: #9A7070;
+  max-width: 260px;
+  line-height: 1.9;
+  margin-bottom: var(--space-md);
+}
+
+.footer__slogan {
+  font-family: var(--font-hindi);
+  font-size: 0.88rem;
+  color: var(--gold);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* — Column headings — */
+.footer__col-title {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--saffron);
+  display: block;
+  margin-bottom: var(--space-lg);
+}
+
+/* — Links — */
+.footer__link {
+  display: block;
+  color: #9A7070;
+  font-size: 0.8rem;
+  margin-bottom: var(--space-sm);
+  transition: var(--transition-fast);
+}
+
+.footer__link:hover {
+  color: var(--saffron);
+  padding-left: 4px;
+}
+
+/* — Contact items — */
+.footer__contact-item {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-start;
+  margin-bottom: var(--space-md);
+}
+
+.footer__contact-icon {
+  color: var(--gold);
+  font-size: 0.88rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.footer__contact-text {
+  font-size: 0.8rem;
+  color: #9A7070;
+  line-height: 1.6;
+}
+
+.footer__contact-text a {
+  color: #9A7070;
+  transition: var(--transition-fast);
+}
+
+.footer__contact-text a:hover {
+  color: var(--saffron);
+}
+
+/* — Org list — */
+.footer__org {
+  font-size: 0.75rem;
+  color: #7A5555;
+  margin-bottom: 6px;
+  padding-left: 8px;
+  border-left: 2px solid rgba(201, 162, 39, 0.2);
+  line-height: 1.5;
+}
+
+/* — Bottom bar — */
+.footer__bottom {
+  border-top: 1px solid rgba(201, 162, 39, 0.1);
+  padding: var(--space-md) var(--space-lg);
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.footer__copy {
+  font-size: 0.72rem;
+  color: #5A3535;
+}
+
+.footer__bottom-links {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.footer__bottom-links a {
+  font-size: 0.72rem;
+  color: #5A3535;
+  transition: var(--transition-fast);
+}
+
+.footer__bottom-links a:hover {
+  color: var(--saffron);
+}
+
+/* ============================================================
+   Responsive Footer
+   ============================================================ */
+@media (max-width: 900px) {
+  .footer__inner {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xl);
+  }
+}
+
+@media (max-width: 560px) {
+  .footer__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+    padding: var(--space-xl) var(--space-lg) var(--space-lg);
+  }
+  .footer__bottom {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-sm);
+  }
+}

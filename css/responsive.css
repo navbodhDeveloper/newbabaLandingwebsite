@@ -1,0 +1,183 @@
+/* ============================================================
+   responsive.css — Media query overrides
+   All breakpoints in one file for easy editing.
+   ============================================================ */
+
+/* ── Tablet ── */
+@media (max-width: 1024px) {
+  :root {
+    --space-3xl: 72px;
+  }
+
+  .hero__inner {
+    gap: var(--space-xl);
+  }
+}
+
+/* ── Large Mobile / Small Tablet ── */
+@media (max-width: 768px) {
+  :root {
+    --space-3xl: 56px;
+    --space-2xl: 48px;
+  }
+
+  .hero {
+    padding-top: calc(var(--nav-height) + 40px);
+    padding-bottom: 60px;
+  }
+
+  .section-header h2 {
+    font-size: 1.6rem;
+  }
+
+  .stats-bar__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+  }
+
+  .programs__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .milestones__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .yatras__list {
+    grid-template-columns: 1fr;
+  }
+
+  .about__stats-mini {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reach__stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Mobile ── */
+@media (max-width: 560px) {
+  :root {
+    --space-3xl: 48px;
+    --space-2xl: 36px;
+    --nav-height: 58px;
+  }
+
+  .container,
+  .container--wide {
+    padding: 0 var(--space-md);
+  }
+
+  .hero {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+
+  .hero__name {
+    font-size: 2.2rem;
+  }
+
+  .hero__buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero__buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stats-bar__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about__stats-mini {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .contact-cta__buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .contact-cta__info {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .reach__stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .form-box {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .aarti-box {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .aarti-box__text {
+    font-size: 1rem;
+  }
+
+  .section-header {
+    margin-bottom: var(--space-xl);
+  }
+
+  .books__grid {
+    gap: var(--space-xs);
+  }
+}
+
+/* ── Scroll to top button ── */
+#scrollTopBtn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--maroon);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(139, 30, 30, 0.3);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+#scrollTopBtn:hover {
+  background: var(--saffron);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+
+#scrollTopBtn.visible {
+  display: flex;
+}
+
+/* ── Print ── */
+@media print {
+  .navbar,
+  .hero__buttons,
+  .contact-cta,
+  #scrollTopBtn {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+}
