@@ -96,3 +96,25 @@ function submitForm(){
   document.getElementById('formArea').style.display='none';
   document.getElementById('formSuccess').style.display='block';
 }
+
+
+const cursor = document.getElementById("cursor");
+const cursorRing = document.getElementById("cursor-ring");
+
+function moveCursor(x, y) {
+  cursor.style.left = x + "px";
+  cursor.style.top = y + "px";
+  cursorRing.style.left = x + "px";
+  cursorRing.style.top = y + "px";
+}
+
+// Mouse
+document.addEventListener("mousemove", (e) => {
+  moveCursor(e.clientX, e.clientY);
+});
+
+// Touch
+document.addEventListener("touchmove", (e) => {
+  const touch = e.touches[0];
+  moveCursor(touch.clientX, touch.clientY);
+});

@@ -872,3 +872,10 @@ footer{
   .form-row{grid-template-columns:1fr}
   .footer-bottom{padding:18px 24px}
 }
+
+@media (max-width: 768px) {
+  #cursor,
+  #cursor-ring {
+    display: none !important;
+  }
+}
