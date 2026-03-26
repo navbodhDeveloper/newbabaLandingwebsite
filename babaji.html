@@ -450,8 +450,14 @@ They fight holding the Tricolor.</div>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 Baba Satyanarayan Mourya · Bharat Bhakti Sansthan · All Rights Reserved</span>
-    <span>Developed By Naman Jain</span>
+
+    <span>© <span id="year"></span> Baba Satyanarayan Mourya · Bharat Bhakti Sansthan · All Rights Reserved</span>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+    <!-- <span>© 2026 Baba Satyanarayan Mourya · Bharat Bhakti Sansthan · All Rights Reserved</span> -->
+    <!-- <span>Developed By Naman Jain</span> -->
   </div>
 </footer>
 
