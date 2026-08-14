@@ -586,6 +586,8 @@ body::after{
   scrollbar-width:thin;
   scrollbar-color:rgba(201,162,39,.3) transparent;
   padding-bottom:16px;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x;
 }
 .gallery-strip::-webkit-scrollbar{height:3px}
 .gallery-strip::-webkit-scrollbar-track{background:transparent}

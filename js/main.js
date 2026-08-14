@@ -1,16 +1,32 @@
 /**
  * main.js — Baba Satyanarayan Mourya Official Website
  *
+ * Rewritten to match the IDs/classes actually used in index.html
+ * (the previous version targeted #navbar, #hamburger, #scrollTopBtn,
+ * a <form id="contactForm">, #f-name/#f-email/etc. and [data-count] —
+ * none of which exist on this page, so it was effectively dead code).
+ *
+ * This file is a drop-in replacement for babaji.js: it includes the
+ * cursor follower and gallery auto-scroll that babaji.js had, plus
+ * the more robust nav/form/counter logic from the original main.js.
+ *
+ * To use: swap the script tag at the bottom of index.html —
+ *   <script src="./babaji.js"></script>
+ *   →
+ *   <script src="./js/main.js" defer></script>
+ *
  * Sections:
- *  1. Navigation (scroll effect, hamburger, active link)
- *  2. Scroll-to-top button
- *  3. Scroll reveal animations
- *  4. Contact form (validation + honeypot + submit)
- *  5. Animated counters
- *  6. Utility helpers
+ *  1. Custom cursor
+ *  2. Navigation (scroll effect, hamburger, active link)
+ *  3. Scroll-to-top button
+ *  4. Scroll reveal animations
+ *  5. Gallery auto-scroll (pauses on hover AND touch)
+ *  6. Contact form (validation + submit, with mailto fallback)
+ *  7. Animated counters
+ *  8. Utility helpers
  *
  * Edit content in: ../index.html (all text, links, images)
- * Edit API URL in: CONTACT_API_URL below
+ * Edit API URL / contact email in: CONFIG below
  */
 
 'use strict';
@@ -19,206 +35,248 @@
    CONFIG — Edit these values
    ============================================================ */
 const CONFIG = {
-  // Change this to your server's URL when deployed
-  // e.g. 'https://yourdomain.com/api/contact'
+  // No backend exists in this repo yet (static Netlify site, no
+  // /api route). Point this at a real endpoint when you have one
+  // (a Netlify Function, Formspree, EmailJS, etc.). Until then,
+  // submitForm() falls back to a mailto: link on failure so the
+  // form still does *something* useful.
   CONTACT_API_URL: '/api/contact',
+  CONTACT_FALLBACK_EMAIL: 'baba@bharatbhakti.com',
 
-  // Minimum characters in message
   MIN_MESSAGE_LENGTH: 20,
-
-  // Scroll reveal threshold (0 = as soon as any pixel visible)
   REVEAL_THRESHOLD: 0.12,
-
-  // Counter animation duration in ms
   COUNTER_DURATION: 1800,
+
+  // ms of inactivity after a manual gallery scroll before
+  // auto-scroll resumes
+  GALLERY_RESUME_DELAY: 2000,
 };
 
 /* ============================================================
-   1. NAVIGATION
+   1. CUSTOM CURSOR
+   ============================================================ */
+(function initCursor() {
+  const cur  = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  if (!cur || !ring) return;
+
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  function moveCursor(x, y) {
+    mx = x; my = y;
+    cur.style.left = x + 'px';
+    cur.style.top  = y + 'px';
+  }
+
+  document.addEventListener('mousemove', e => moveCursor(e.clientX, e.clientY));
+  document.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    if (t) moveCursor(t.clientX, t.clientY);
+  }, { passive: true });
+
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top  = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, button, [onclick]').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cur.style.width = '20px'; cur.style.height = '20px';
+      ring.style.width = '52px'; ring.style.height = '52px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cur.style.width = '12px'; cur.style.height = '12px';
+      ring.style.width = '36px'; ring.style.height = '36px';
+    });
+  });
+})();
+
+/* ============================================================
+   2. NAVIGATION
    ============================================================ */
 (function initNav() {
-  const navbar     = document.getElementById('navbar');
-  const hamburger  = document.getElementById('hamburger');
+  const navbar     = document.getElementById('nav');
+  const hamburger  = document.querySelector('.hamburger');
   const mobileMenu = document.getElementById('mobileMenu');
-  const navLinks   = document.querySelectorAll('.navbar__links a, .navbar__mobile a[data-section]');
+  const navLinks   = document.querySelectorAll('.nav-links a');
   const sections   = document.querySelectorAll('section[id]');
 
   if (!navbar) return;
 
-  /* Scroll: add .scrolled class */
   function onScroll() {
-    if (window.scrollY > 60) {
-      navbar.classList.add('scrolled');
-    } else {
-      navbar.classList.remove('scrolled');
-    }
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
     highlightActiveLink();
   }
 
-  /* Active nav link based on scroll position */
   function highlightActiveLink() {
     let current = '';
     sections.forEach(sec => {
-      const top = sec.offsetTop - 100;
-      if (window.scrollY >= top) {
-        current = sec.id;
-      }
+      if (window.scrollY >= sec.offsetTop - 100) current = sec.id;
     });
-
-    document.querySelectorAll('.navbar__links a').forEach(a => {
-      a.classList.remove('active');
-      if (a.getAttribute('href') === '#' + current) {
-        a.classList.add('active');
-      }
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
     });
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll(); // run once on load
+  onScroll();
 
-  /* Hamburger toggle */
-  if (hamburger && mobileMenu) {
-    hamburger.addEventListener('click', function () {
-      const isOpen = mobileMenu.classList.toggle('open');
-      hamburger.classList.toggle('open', isOpen);
-      hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      document.body.style.overflow = isOpen ? 'hidden' : '';
-    });
+  // Hamburger + mobile menu: index.html calls these via inline
+  // onclick="toggleMenu()" / onclick="closeMenu()", so they need
+  // to stay as real global functions rather than addEventListener.
+  window.toggleMenu = function () {
+    if (!mobileMenu || !hamburger) return;
+    const isOpen = mobileMenu.classList.toggle('open');
+    hamburger.textContent = isOpen ? '✕' : '☰';
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  };
 
-    /* Close mobile menu when a link is clicked */
-    mobileMenu.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', function () {
-        mobileMenu.classList.remove('open');
-        hamburger.classList.remove('open');
-        hamburger.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-      });
-    });
+  window.closeMenu = function () {
+    if (!mobileMenu || !hamburger) return;
+    mobileMenu.classList.remove('open');
+    hamburger.textContent = '☰';
+    document.body.style.overflow = '';
+  };
 
-    /* Close on outside click */
-    document.addEventListener('click', function (e) {
-      if (!navbar.contains(e.target) && mobileMenu.classList.contains('open')) {
-        mobileMenu.classList.remove('open');
-        hamburger.classList.remove('open');
-        hamburger.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-      }
-    });
-  }
-})();
-
-/* ============================================================
-   2. SCROLL TO TOP
-   ============================================================ */
-(function initScrollTop() {
-  const btn = document.getElementById('scrollTopBtn');
-  if (!btn) return;
-
-  window.addEventListener('scroll', function () {
-    btn.classList.toggle('visible', window.scrollY > 400);
-  }, { passive: true });
-
-  btn.addEventListener('click', function () {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.addEventListener('click', e => {
+    if (mobileMenu && mobileMenu.classList.contains('open') &&
+        !navbar.contains(e.target) && !mobileMenu.contains(e.target)) {
+      window.closeMenu();
+    }
   });
 })();
 
 /* ============================================================
-   3. SCROLL REVEAL ANIMATIONS
+   3. SCROLL TO TOP
+   ============================================================ */
+(function initScrollTop() {
+  const btn = document.getElementById('sctop');
+  if (!btn) return;
+
+  window.addEventListener('scroll', () => {
+    btn.style.display = window.scrollY > 500 ? 'flex' : 'none';
+  }, { passive: true });
+  // btn's own scroll-to-top action is already wired via inline onclick in the HTML
+})();
+
+/* ============================================================
+   4. SCROLL REVEAL ANIMATIONS
    ============================================================ */
 (function initReveal() {
-  const elements = document.querySelectorAll('.reveal, .reveal--left, .reveal--right');
+  const elements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
   if (!elements.length) return;
 
-  // Respect prefers-reduced-motion
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReduced) {
-    elements.forEach(el => el.classList.add('revealed'));
+  if (prefersReduced || !('IntersectionObserver' in window)) {
+    elements.forEach(el => el.classList.add('visible'));
     return;
   }
 
-  if (!('IntersectionObserver' in window)) {
-    // Fallback for old browsers
-    elements.forEach(el => el.classList.add('revealed'));
-    return;
-  }
-
-  const observer = new IntersectionObserver(function (entries) {
+  const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        entry.target.classList.add('revealed');
+        entry.target.classList.add('visible');
         observer.unobserve(entry.target);
       }
     });
-  }, {
-    threshold: CONFIG.REVEAL_THRESHOLD,
-    rootMargin: '0px 0px -40px 0px'
-  });
+  }, { threshold: CONFIG.REVEAL_THRESHOLD, rootMargin: '0px 0px -40px 0px' });
 
   elements.forEach(el => observer.observe(el));
 })();
 
 /* ============================================================
-   4. CONTACT FORM
+   5. GALLERY AUTO-SCROLL
+   ============================================================ */
+(function initGallery() {
+  const strip = document.getElementById('galleryStrip');
+  if (!strip) return;
+
+  let autoScroll = true;
+  let scrollPos = strip.scrollLeft;
+  let resumeTimer = null;
+
+  function tick() {
+    if (autoScroll) {
+      scrollPos += 0.6;
+      if (scrollPos >= strip.scrollWidth - strip.clientWidth) scrollPos = 0;
+      strip.scrollLeft = scrollPos;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  strip.addEventListener('mouseenter', () => { autoScroll = false; });
+  strip.addEventListener('mouseleave', () => { autoScroll = true; });
+
+  function pause() {
+    autoScroll = false;
+    if (resumeTimer) clearTimeout(resumeTimer);
+  }
+  function scheduleResume() {
+    if (resumeTimer) clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(() => {
+      scrollPos = strip.scrollLeft;
+      autoScroll = true;
+    }, CONFIG.GALLERY_RESUME_DELAY);
+  }
+
+  strip.addEventListener('touchstart', pause, { passive: true });
+  strip.addEventListener('touchend', scheduleResume, { passive: true });
+  strip.addEventListener('pointerdown', pause);
+  strip.addEventListener('pointerup', scheduleResume);
+  strip.addEventListener('scroll', () => {
+    if (!autoScroll) scrollPos = strip.scrollLeft;
+  }, { passive: true });
+})();
+
+/* ============================================================
+   6. CONTACT FORM
    ============================================================ */
 (function initContactForm() {
-  const form        = document.getElementById('contactForm');
-  const formWrap    = document.getElementById('contactFormWrap');
-  const successEl   = document.getElementById('formSuccess');
-  const errorEl     = document.getElementById('formError');
-  const submitBtn   = document.getElementById('formSubmit');
+  // No <form> element wraps the fields in index.html — the button
+  // uses onclick="submitForm()" — so this stays a global function
+  // rather than a "submit" event listener.
+  const errorEl   = document.getElementById('ferr');
+  const areaEl    = document.getElementById('formArea');
+  const successEl = document.getElementById('formSuccess');
+  const submitBtn = areaEl ? areaEl.querySelector('button') : null;
 
-  if (!form) return;
+  if (!areaEl) return;
 
-  /* Simple email regex */
   function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
   }
-
-  /* Show error */
   function showError(msg) {
     if (!errorEl) return;
     errorEl.textContent = msg;
     errorEl.style.display = 'block';
   }
-
-  /* Hide error */
   function hideError() {
     if (!errorEl) return;
     errorEl.style.display = 'none';
     errorEl.textContent = '';
   }
-
-  /* Set button loading state */
   function setLoading(loading) {
     if (!submitBtn) return;
     submitBtn.disabled = loading;
-    submitBtn.textContent = loading ? 'Sending...' : '📤 Send Message';
+    submitBtn.textContent = loading ? 'Sending...' : '📤 Send Invitation';
   }
 
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
+  window.submitForm = async function () {
     hideError();
 
-    const name      = document.getElementById('f-name')?.value.trim()    || '';
-    const email     = document.getElementById('f-email')?.value.trim()   || '';
-    const phone     = document.getElementById('f-phone')?.value.trim()   || '';
-    const eventType = document.getElementById('f-type')?.value           || '';
-    const subject   = document.getElementById('f-subject')?.value.trim() || '';
-    const message   = document.getElementById('f-message')?.value.trim() || '';
-    const honey     = document.getElementById('f-honey')?.value          || '';
+    const name    = document.getElementById('fname')?.value.trim()    || '';
+    const email   = document.getElementById('femail')?.value.trim()   || '';
+    const subject = document.getElementById('fsubject')?.value.trim() || '';
+    const message = document.getElementById('fmessage')?.value.trim() || '';
 
-    /* Honeypot check — if filled, silently pretend success */
-    if (honey) {
-      if (formWrap) formWrap.style.display = 'none';
-      if (successEl) successEl.style.display = 'block';
-      return;
-    }
-
-    /* Validation */
-    if (!name) { showError('Please enter your full name.'); return; }
+    if (!name || name.length < 2) { showError('Please enter your full name.'); return; }
     if (!email || !isValidEmail(email)) { showError('Please enter a valid email address.'); return; }
-    if (!subject) { showError('Please enter a subject.'); return; }
+    if (!subject || subject.length < 3) { showError('Please enter a subject.'); return; }
     if (message.length < CONFIG.MIN_MESSAGE_LENGTH) {
       showError(`Message must be at least ${CONFIG.MIN_MESSAGE_LENGTH} characters.`);
       return;
@@ -230,31 +288,31 @@ const CONFIG = {
       const res = await fetch(CONFIG.CONTACT_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, phone, eventType, subject, message })
+        body: JSON.stringify({ name, email, subject, message })
       });
-
       const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Server rejected the request.');
 
-      if (data.success) {
-        if (formWrap) formWrap.style.display = 'none';
-        if (successEl) successEl.style.display = 'block';
-        form.reset();
-      } else {
-        showError(data.error || 'Something went wrong. Please try again or call us directly.');
-      }
+      areaEl.style.display = 'none';
+      if (successEl) successEl.style.display = 'block';
     } catch (err) {
-      // Network error fallback
-      showError('Unable to send message. Please call +91 94259 56060 directly.');
+      // No backend is deployed yet, so this is the expected path today.
+      // Fall back to opening a pre-filled email instead of failing silently.
+      const body = encodeURIComponent(
+        `Name: ${name}\nEmail: ${email}\n\n${message}`
+      );
+      window.location.href =
+        `mailto:${CONFIG.CONTACT_FALLBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${body}`;
+      showError('Message service is unavailable right now — opening your email app instead. You can also call +91 94259 56060.');
     } finally {
       setLoading(false);
     }
-  });
+  };
 
-  /* Reset form (try again button) */
   const resetBtn = document.getElementById('formReset');
   if (resetBtn) {
-    resetBtn.addEventListener('click', function () {
-      if (formWrap) formWrap.style.display = 'block';
+    resetBtn.addEventListener('click', () => {
+      areaEl.style.display = 'block';
       if (successEl) successEl.style.display = 'none';
       hideError();
     });
@@ -262,68 +320,69 @@ const CONFIG = {
 })();
 
 /* ============================================================
-   5. ANIMATED COUNTERS
+   7. ANIMATED COUNTERS
    ============================================================ */
 (function initCounters() {
-  const counters = document.querySelectorAll('[data-count]');
-  if (!counters.length) return;
+  const statsSection = document.getElementById('stats');
+  const nums = document.querySelectorAll('.stat-num');
+  if (!statsSection || !nums.length) return;
 
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function animateCounter(el) {
-    const target   = parseInt(el.dataset.count, 10);
-    const suffix   = el.dataset.suffix || '';
-    const duration = CONFIG.COUNTER_DURATION;
-    const start    = performance.now();
+    const raw = el.textContent.trim();
+    if (raw === 'Gold' || el.dataset.animated) return; // non-numeric, leave as-is
+    el.dataset.animated = '1';
 
-    if (prefersReduced || isNaN(target)) {
-      el.textContent = target.toLocaleString() + suffix;
+    const hasPlus = raw.includes('+');
+    const target = parseInt(raw.replace(/[^0-9]/g, ''), 10);
+    if (isNaN(target)) return;
+
+    if (prefersReduced) {
+      el.textContent = target.toLocaleString() + (hasPlus ? '+' : '');
       return;
     }
 
+    const duration = CONFIG.COUNTER_DURATION;
+    const start = performance.now();
+
     function update(now) {
-      const elapsed  = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
-      const eased    = 1 - Math.pow(1 - progress, 3);
-      const current  = Math.round(eased * target);
-      el.textContent = current.toLocaleString() + suffix;
-
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      } else {
-        el.textContent = target.toLocaleString() + suffix;
-      }
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(eased * target);
+      el.textContent = current.toLocaleString() + (progress >= 1 && hasPlus ? '+' : '');
+      if (progress < 1) requestAnimationFrame(update);
     }
-
     requestAnimationFrame(update);
   }
 
   if (!('IntersectionObserver' in window)) {
-    counters.forEach(animateCounter);
+    nums.forEach(animateCounter);
     return;
   }
 
-  const observer = new IntersectionObserver(function (entries) {
+  const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        animateCounter(entry.target);
-        observer.unobserve(entry.target);
+        entry.target.querySelectorAll('.stat-num').forEach(animateCounter);
       }
     });
   }, { threshold: 0.3 });
 
-  counters.forEach(el => observer.observe(el));
+  observer.observe(statsSection);
 })();
 
 /* ============================================================
-   6. UTILITY
+   8. UTILITY
    ============================================================ */
 
-/* Smooth scroll for all anchor links */
+/* Smooth scroll for plain #hash anchor links (nav uses these;
+   footer/CTA links use inline scrollIntoView and are unaffected) */
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', function (e) {
-    const target = document.querySelector(this.getAttribute('href'));
+    const id = this.getAttribute('href');
+    if (id.length < 2) return;
+    const target = document.querySelector(id);
     if (target) {
       e.preventDefault();
       const top = target.getBoundingClientRect().top + window.scrollY;
@@ -332,26 +391,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 
-/* Lazy-load images (browser-native, JS fallback) */
-if ('loading' in HTMLImageElement.prototype) {
-  // Native lazy loading is supported, do nothing
-} else {
-  // Fallback: IntersectionObserver for older browsers
-  const lazyImages = document.querySelectorAll('img[loading="lazy"]');
-  if (lazyImages.length && 'IntersectionObserver' in window) {
-    const imgObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          if (img.dataset.src) img.src = img.dataset.src;
-          imgObserver.unobserve(img);
-        }
-      });
-    });
-    lazyImages.forEach(img => imgObserver.observe(img));
-  }
-}
-
-/* Current year in footer */
-const yearEl = document.getElementById('currentYear');
-if (yearEl) yearEl.textContent = new Date().getFullYear();
+/* Footer year (index.html also sets #year inline; this covers
+   either id so the script works even if that inline tag is removed) */
+const yearTarget = document.getElementById('year') || document.getElementById('currentYear');
+if (yearTarget) yearTarget.textContent = new Date().getFullYear();

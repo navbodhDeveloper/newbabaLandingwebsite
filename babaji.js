@@ -37,7 +37,7 @@ document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale').fo
 
 // ── Gallery auto-scroll
 const strip=document.getElementById('galleryStrip');
-let autoScroll=true,scrollPos=0;
+let autoScroll=true,scrollPos=strip?strip.scrollLeft:0,resumeTimer=null;
 function doAutoScroll(){
   if(autoScroll&&strip){
     scrollPos+=.6;
@@ -47,8 +47,32 @@ function doAutoScroll(){
   requestAnimationFrame(doAutoScroll);
 }
 doAutoScroll();
-strip.addEventListener('mouseenter',()=>autoScroll=false);
-strip.addEventListener('mouseleave',()=>autoScroll=true);
+if(strip){
+  // Pause on desktop hover
+  strip.addEventListener('mouseenter',()=>autoScroll=false);
+  strip.addEventListener('mouseleave',()=>autoScroll=true);
+
+  // Pause on touch/manual interaction (mobile), resume a moment after release
+  function pauseAutoScroll(){
+    autoScroll=false;
+    if(resumeTimer)clearTimeout(resumeTimer);
+  }
+  function scheduleResume(){
+    if(resumeTimer)clearTimeout(resumeTimer);
+    resumeTimer=setTimeout(()=>{
+      scrollPos=strip.scrollLeft;
+      autoScroll=true;
+    },2000);
+  }
+  strip.addEventListener('touchstart',pauseAutoScroll,{passive:true});
+  strip.addEventListener('touchend',scheduleResume,{passive:true});
+  strip.addEventListener('pointerdown',pauseAutoScroll);
+  strip.addEventListener('pointerup',scheduleResume);
+  // Keep scrollPos in sync whenever the user scrolls it manually (any input method)
+  strip.addEventListener('scroll',()=>{
+    if(!autoScroll)scrollPos=strip.scrollLeft;
+  },{passive:true});
+}
 
 // ── Counter animation
 function animateCounter(el,target,suffix=''){
